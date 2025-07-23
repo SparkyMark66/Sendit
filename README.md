@@ -31,7 +31,7 @@ A simple, fast, and easy-to-use desktop application for sharing text and small f
 3. **Navigate to the Directory:**  
    * In the terminal, use the cd (change directory) command to go to the folder where you extracted the code. For example:  
      \# Example if you saved it to your Desktop  
-     cd Desktop/data-sharer-main 
+     cd Desktop/sendit 
 
 4. **Run the Script:**  
    * Type the following command and press Enter:  
