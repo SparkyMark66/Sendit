@@ -2,7 +2,7 @@
 
 A simple, fast, and easy-to-use desktop application for sharing text and small files across computers on your local network. No cloud services, no sign-ups, just direct peer-to-peer sharing.
 
-\<\!-- A placeholder for a screenshot of your app \--\>
+![Alt image of the utility]([image-url](https://github.com/SparkyMark66/Sendit/blob/main/sendit.png))
 
 ## **Features**
 
