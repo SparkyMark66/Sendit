@@ -7,8 +7,6 @@ import os
 # --- Configuration ---
 # Using a non-common UDP port to avoid conflicts.
 UDP_PORT = 61991
-# Using the broadcast address to send data to all devices on the network.
-BROADCAST_ADDR = '<broadcast>'
 # Define the buffer size for receiving data. 4096 bytes = 4KB.
 BUFFER_SIZE = 4096
 # Define the character encoding for network transmission.
@@ -24,9 +22,9 @@ class DataSharerApp:
         Initializes the main application window and its components.
         """
         self.root = root
-        self.root.title("Cross-Platform Data Sharer")
-        self.root.geometry("700x800")
-        self.root.minsize(500, 400)
+        self.root.title("Cross-Platform Data Transfer on the Local network")
+        self.root.geometry("700x800") # Increased height for the new field
+        self.root.minsize(500, 450)
 
         # --- UI Styling ---
         self.bg_color = "#f0f0f0"
@@ -40,6 +38,18 @@ class DataSharerApp:
         # --- Main Frame ---
         main_frame = tk.Frame(self.root, padx=10, pady=10, bg=self.bg_color)
         main_frame.pack(expand=True, fill=tk.BOTH)
+
+        # --- Target Address Section ---
+        target_frame = tk.Frame(main_frame, bg=self.bg_color)
+        target_frame.pack(pady=(0, 10), fill=tk.X)
+
+        target_label = tk.Label(target_frame, text="Target IP / Hostname:", bg=self.bg_color, font=(self.font_family, self.font_size))
+        target_label.pack(side=tk.LEFT, padx=(0, 5))
+        
+        self.target_address_var = tk.StringVar(value='<broadcast>')
+        self.target_address_entry = tk.Entry(target_frame, textvariable=self.target_address_var, font=(self.font_family, self.font_size))
+        self.target_address_entry.pack(side=tk.LEFT, expand=True, fill=tk.X)
+
 
         # --- Sending Section ---
         send_frame = tk.LabelFrame(main_frame, text="Send Text", padx=10, pady=10, bg=self.bg_color, font=(self.font_family, 12))
@@ -104,17 +114,25 @@ class DataSharerApp:
 
     def send_data(self):
         """
-        Sends the text from the input box over the network.
+        Sends the text from the input box to the specified target address.
         """
         message = self.send_text.get("1.0", tk.END).strip()
         if not message:
             messagebox.showwarning("Empty Message", "Cannot send an empty message.")
             return
 
+        target_addr = self.target_address_var.get().strip()
+        if not target_addr:
+            messagebox.showwarning("No Target", "Please specify a target IP / Hostname or use '<broadcast>'.")
+            return
+
         try:
-            # Encode the message and send it to the broadcast address
-            self.sock.sendto(message.encode(ENCODING), (BROADCAST_ADDR, UDP_PORT))
-            self.update_received_text(f"[SENT]: You sent a message.\n")
+            # Encode the message and send it to the specified address
+            self.sock.sendto(message.encode(ENCODING), (target_addr, UDP_PORT))
+            # Provide success feedback in the received text area
+            self.update_received_text(f"[SUCCESS]: Message sent to {target_addr}.\n\n")
+        except socket.gaierror:
+            messagebox.showerror("Address Error", f"Hostname could not be resolved: {target_addr}\nPlease enter a valid IP address or hostname.")
         except Exception as e:
             messagebox.showerror("Send Error", f"Failed to send data: {e}")
 
@@ -128,10 +146,10 @@ class DataSharerApp:
                 data, addr = self.sock.recvfrom(BUFFER_SIZE)
                 # Decode the message and schedule the UI update on the main thread
                 message = data.decode(ENCODING)
-                # We use `schedule_update` to safely update the Tkinter UI from this background thread.
-                self.root.after(0, self.update_received_text, f"[{addr[0]}]:\n{message}\n\n")
+                # Use `root.after` to safely update the Tkinter UI from this background thread.
+                self.root.after(0, self.update_received_text, f"[RECEIVED from {addr[0]}]:\n{message}\n\n")
             except Exception:
-                # This can happen when the socket is closed.
+                # This exception will likely occur when the socket is closed, ending the loop.
                 break
 
     def update_received_text(self, message):
